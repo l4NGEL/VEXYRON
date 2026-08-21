@@ -21,13 +21,13 @@ Amaç: web (OWASP Top 10 tarzı), mobil backend API ve mobil APK statik analizin
 <table>
 <tr><td>
 
-![Hedefini Tara](docs/screenshot-scan.svg)
+![Hedefini Tara](docs/screenshot-scan.png)
 <p align="center"><sub>Tarama formu — profil seç, kapsam anında görünür, tek tıkla başlat.</sub></p>
 
 </td></tr>
 <tr><td>
 
-![Sonuç sayfası](docs/screenshot-results.svg)
+![Sonuç sayfası](docs/screenshot-results.png)
 <p align="center"><sub>Sonuç sayfası — production-readiness verdict'i + kanıtlı bulgular.</sub></p>
 
 </td></tr>
@@ -49,17 +49,17 @@ Amaç: web (OWASP Top 10 tarzı), mobil backend API ve mobil APK statik analizin
 
 | | |
 |---|---|
-| 🕵️ **Kapsamlı tarama** | Web (SQLi, XSS, CSRF, IDOR, broken access control, komut enjeksiyonu...), mobil backend/JSON API, mobil APK statik analiz, ağ/port taraması, veritabanı servis maruziyeti |
-| 🧾 **Kanıtlı bulgular** | Her bulgu gönderilen payload + alınan yanıtla gelir — "sorun var" demez, neden öyle düşündüğünü gösterir |
-| 🚦 **Production-readiness verdict** | Severity'ye göre otomatik NOT READY / READY WITH WARNINGS / READY kararı + CI/CD için process exit code |
-| 🎯 **Kontrol grubu ile doğrulanmış** | `vulnerable-app` içinde bilerek güvenli bırakılmış eşleniklerle scanner'ın gerçekten ayrım yaptığı kanıtlanır |
-| 🩺 **Smoke test** | Ağır taramadan önce saniyeler süren "hedef ayakta mı" kontrolü |
-| 📈 **Yük/stres testi** | Aşamalı (ramp) senaryolar + geçti/kaldı eşikleri — harici bir binary gerekmeden |
-| 📄 **3 rapor formatı** | HTML (göz atmak için), PDF (paylaşmak için), JSON (CI/CD, makine-okunur) |
-| ✅ **Bulgu inceleme/kabul akışı** | Gerekçeli "kabul edilmiş risk" / "false positive" işaretleme — bulgu kaybolmaz, sadece verdict'ten çıkar |
-| 🖥️ **İki arayüz, tek motor** | webapp ve CLI aynı `run_full_scan()` fonksiyonunu çağırır — biri diğerinden geride kalmaz |
+| **Kapsamlı tarama** | Web (SQLi, XSS, CSRF, IDOR, broken access control, komut enjeksiyonu...), mobil backend/JSON API, mobil APK statik analiz, ağ/port taraması, veritabanı servis maruziyeti |
+| **Kanıtlı bulgular** | Her bulgu gönderilen payload + alınan yanıtla gelir — "sorun var" demez, neden öyle düşündüğünü gösterir |
+| **Production-readiness verdict** | Severity'ye göre otomatik NOT READY / READY WITH WARNINGS / READY kararı + CI/CD için process exit code |
+| **Kontrol grubu ile doğrulanmış** | `vulnerable-app` içinde bilerek güvenli bırakılmış eşleniklerle scanner'ın gerçekten ayrım yaptığı kanıtlanır |
+| **Smoke test** | Ağır taramadan önce saniyeler süren "hedef ayakta mı" kontrolü |
+| **Yük/stres testi** | Aşamalı (ramp) senaryolar + geçti/kaldı eşikleri — harici bir binary gerekmeden |
+| **3 rapor formatı** | HTML (göz atmak için), PDF (paylaşmak için), JSON (CI/CD, makine-okunur) |
+| **Bulgu inceleme/kabul akışı** | Gerekçeli "kabul edilmiş risk" / "false positive" işaretleme — bulgu kaybolmaz, sadece verdict'ten çıkar |
+| **İki arayüz, tek motor** | webapp ve CLI aynı `run_full_scan()` fonksiyonunu çağırır — biri diğerinden geride kalmaz |
 
-## ⚠️ Etik ve Yasal Uyarı
+## Etik ve Yasal Uyarı
 
 - `scanner`, **yalnızca kendi izniniz olan sistemleri** taramak için tasarlanmıştır.
 - Varsayılan olarak sadece `localhost` / private IP aralıklarını (127.0.0.1, 10.x.x.x, 192.168.x.x, 172.16-31.x.x) tarar. Başka bir hedefi taramaya çalışırsanız `safety.py` bunu reddeder; bilinçli olarak `--i-authorize-this-scan` bayrağını geçmeniz gerekir.
@@ -144,9 +144,9 @@ Her iki yol da aynı şeyi yapar: web tarama, mobil backend/API tarama, mobil AP
 
 | Durum | Anlamı | Process exit code |
 |---|---|:---:|
-| ❌ **NOT READY FOR PRODUCTION** | En az bir Critical/High bulgu var | `1` |
-| ⚠️ **READY WITH WARNINGS** | Sadece Medium bulgu(lar) var | `0` |
-| ✅ **READY FOR PRODUCTION** | Sadece Low/Info veya hiç bulgu yok | `0` |
+| **NOT READY FOR PRODUCTION** | En az bir Critical/High bulgu var | `1` |
+| **READY WITH WARNINGS** | Sadece Medium bulgu(lar) var | `0` |
+| **READY FOR PRODUCTION** | Sadece Low/Info veya hiç bulgu yok | `0` |
 
 Non-zero exit code, bu aracı doğrudan bir CI/CD pipeline'ında **"production'a deploy etmeden önce çalıştır, kırmızıysa dur"** şeklinde bir gate olarak kullanmayı mümkün kılar. Her bulgu, iddiayı "kanıtlanabilir" kılan somut bir `evidence` alanı taşır (gönderilen payload, alınan HTTP durumu, yanıttaki DB hata mesajı vb.) — sadece "burada sorun var" demez, neden öyle düşündüğünü gösterir.
 
