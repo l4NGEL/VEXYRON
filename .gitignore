@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.db
+instance/
+reports/*/
+!reports/.gitkeep
+.env
+lab_config.json
+webapp/uploads/
+.claude/

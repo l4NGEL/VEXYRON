@@ -1,0 +1,9 @@
+[
+  {
+    "finding_id": "7d4d3055b895",
+    "disposition": "accepted_risk",
+    "reason": "Bu, bu geliştirme makinesinin Windows işletim sisteminin kendi MSRPC portu -- vulnerable-app'in bir parçası değil, sadece scanner localhost'ta çalıştığı için görünüyor. Prod ortamında bu bulgu yeniden değerlendirilmeli.",
+    "reviewed_by": "demo",
+    "reviewed_at": "2026-08-18"
+  }
+]

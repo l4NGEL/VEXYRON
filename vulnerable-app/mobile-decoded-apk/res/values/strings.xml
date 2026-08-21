@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DemoShop</string>
+    <string name="api_base_url">http://api.demoshop.local/</string>
+    <!-- INTENTIONAL VULN #22: kaynak dosyada duz metin secret/API key -->
+    <string name="aws_secret_access_key">AKIAIOSFODNN7EXAMPLE</string>
+    <string name="stripe_api_key">FAKE-DEMO-KEY--sk-live--51H8xample--NOT-REAL--000000</string>
+</resources>

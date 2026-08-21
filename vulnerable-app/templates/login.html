@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Giriş Yap</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<form method="post">
+  <label>Kullanıcı adı <input type="text" name="username"></label>
+  <label>Şifre <input type="password" name="password"></label>
+  <button type="submit">Giriş</button>
+</form>
+<p class="hint">Demo hesap: admin / admin123</p>
+{% endblock %}

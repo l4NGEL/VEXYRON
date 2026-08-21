@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}VEXYRON{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v={{ style_version }}">
+  <script>
+    try { if (localStorage.getItem("pl-theme") === "dark") document.documentElement.setAttribute("data-theme", "dark"); } catch (e) {}
+  </script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% import "_macros.html" as ui %}
+  <div class="app-shell">
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-row">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">{{ ui.svg_icon('shield') }}</span>
+          <span class="brand-text-group">
+            <span class="brand-text">VEXYRON</span>
+            <span class="brand-tagline">Security Validation Platform</span>
+          </span>
+        </div>
+        <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Kenar çubuğunu daralt">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="{{ url_for('index') }}" class="{{ 'active' if request.endpoint == 'index' else '' }}">
+          <span class="icon">{{ ui.svg_icon('scan') }}</span>
+          <span class="nav-label">Hedefini Tara</span>
+        </a>
+        <a href="{{ url_for('history') }}" class="{{ 'active' if request.endpoint in ('history', 'history_view') else '' }}">
+          <span class="icon">{{ ui.svg_icon('history') }}</span>
+          <span class="nav-label">Tarama Geçmişi</span>
+        </a>
+        <a href="{{ url_for('vulndb') }}" class="{{ 'active' if request.endpoint == 'vulndb' else '' }}">
+          <span class="icon">{{ ui.svg_icon('database') }}</span>
+          <span class="nav-label">Vulnerability DB</span>
+        </a>
+        <a href="{{ url_for('settings_page') }}" class="{{ 'active' if request.endpoint == 'settings_page' else '' }}">
+          <span class="icon">{{ ui.svg_icon('settings') }}</span>
+          <span class="nav-label">Ayarlar</span>
+        </a>
+      </nav>
+      <button type="button" class="user-card" id="user-card-btn" aria-expanded="false" aria-haspopup="true">
+        <div class="avatar" aria-hidden="true">P</div>
+        <div class="user-meta">
+          <div class="user-name">Pentester <span class="lab-badge">Pro</span></div>
+          <div class="user-email">pentester@lab.local</div>
+        </div>
+        <span class="user-chevron" aria-hidden="true">{{ ui.svg_icon('chevron') }}</span>
+      </button>
+      <div class="user-menu" id="user-menu" hidden>
+        <a href="{{ url_for('settings_page') }}">Ayarlar</a>
+        <a href="{{ url_for('history') }}">Tarama geçmişi</a>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="top-header">
+        <button type="button" class="menu-btn" id="menu-btn" aria-label="Menüyü aç">
+          <span></span><span></span><span></span>
+        </button>
+        <span class="top-crumb">{% block topbar %}VEXYRON{% endblock %}</span>
+        <div class="top-actions">
+          <button type="button" class="icon-btn" id="theme-toggle" aria-label="Tema">
+            <span class="icon-sun">{{ ui.svg_icon('sun') }}</span>
+            <span class="icon-moon">{{ ui.svg_icon('moon') }}</span>
+          </button>
+          <div class="top-pop">
+            <button type="button" class="icon-btn" id="notif-btn" aria-label="Bildirimler" aria-expanded="false">
+              {{ ui.svg_icon('bell') }}
+            </button>
+            <div class="pop-card" id="notif-menu" hidden>
+              <strong>Bildirimler</strong>
+              <p>Yeni bildirim yok. Taramalar bu makinede kalır.</p>
+            </div>
+          </div>
+          <span class="avatar avatar-sm" title="Pentester" aria-hidden="true">P</span>
+        </div>
+      </header>
+      <main class="container">
+        {% block content %}{% endblock %}
+      </main>
+      <footer class="app-footer">
+        <span>© 2026 VEXYRON</span>
+        <span>v1.0 · yerel araç</span>
+      </footer>
+    </div>
+  </div>
+  <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='app.js') }}?v={{ style_version }}"></script>
+</body>
+</html>

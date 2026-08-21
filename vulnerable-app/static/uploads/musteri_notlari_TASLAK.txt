@@ -1,0 +1,3 @@
+Taslak dosya -- demo amacli, gercek musteri verisi degildir.
+Bu dosyanin /uploads/ dizin listesi uzerinden herkese acik olmasi
+INTENTIONAL VULN #12 (directory listing) senaryosunu temsil eder.

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}VEXYRON Demo Shop{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}" class="brand">DemoShop</a>
+    <a href="{{ url_for('search') }}">Arama</a>
+    <a href="{{ url_for('guestbook') }}">Ziyaretçi Defteri</a>
+    <a href="{{ url_for('tools_ping') }}">Ping Aracı</a>
+    {% if user %}
+      <a href="{{ url_for('profile', user_id=user['id']) }}">Profilim</a>
+      <a href="{{ url_for('admin') }}">Admin</a>
+      <a href="{{ url_for('admin_secure') }}">Admin (Güvenli)</a>
+      <a href="{{ url_for('logout') }}">Çıkış ({{ user['username'] }})</a>
+    {% else %}
+      <a href="{{ url_for('login') }}">Giriş</a>
+    {% endif %}
+  </nav>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

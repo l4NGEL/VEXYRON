@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Sonuç — VEXYRON{% endblock %}
+{% block topbar %}{{ target }}{% endblock %}
+{% block content %}
+<div class="results-nav">
+  {% if from_history %}
+    <a href="{{ url_for('history') }}" class="back-link">← Tarama geçmişi</a>
+    <span class="muted-dot">geçmiş kayıt</span>
+  {% else %}
+    <a href="{{ url_for('index') }}" class="back-link">← Yeni tarama</a>
+  {% endif %}
+</div>
+
+<div class="verdict-banner verdict-{{ verdict.status|lower }}">
+  <p class="verdict-kicker">Production readiness</p>
+  <h2>{{ verdict.label }}</h2>
+  {% set c = verdict.counts or {} %}
+  {% set crit = c.get('Critical', 0) %}
+  {% set high = c.get('High', 0) %}
+  {% set med = c.get('Medium', 0) %}
+  {% set low = c.get('Low', 0) %}
+  {% set info = c.get('Info', 0) %}
+  {% set total = crit + high + med + low + info %}
+  {% if total > 0 %}
+  <div class="sev-meter" aria-hidden="true">
+    <span class="seg seg-critical" style="flex: {{ crit }}"></span>
+    <span class="seg seg-high" style="flex: {{ high }}"></span>
+    <span class="seg seg-medium" style="flex: {{ med }}"></span>
+    <span class="seg seg-low" style="flex: {{ low }}"></span>
+    <span class="seg seg-info" style="flex: {{ info }}"></span>
+  </div>
+  {% endif %}
+  <div class="counts">
+    {% for sev in ['Critical', 'High', 'Medium', 'Low', 'Info'] %}
+      <span class="count-pill count-{{ sev|lower }}">{{ sev }}: {{ c.get(sev, 0) }}</span>
+    {% endfor %}
+    {% if verdict.accepted_count %}
+      <span class="count-pill count-pill-muted">İncelenmiş: {{ verdict.accepted_count }} (verdict dışı)</span>
+    {% endif %}
+  </div>
+</div>
+
+<p class="meta">
+  Hedef: <code>{{ target }}</code>
+  {% if report_id %}
+    · <a href="{{ url_for('download_report', subpath=report_id ~ '/report.html') }}">HTML rapor</a>
+    · <a href="{{ url_for('download_report', subpath=report_id ~ '/report.pdf') }}">PDF rapor</a>
+    · <a href="{{ url_for('download_report', subpath=report_id ~ '/report.json') }}">JSON rapor</a>
+  {% endif %}
+</p>
+
+{% if smoke_test_result %}
+<div class="loadtest-box">
+  <h2 class="section-title" style="margin-top:0">Smoke Test
+    <span class="pill {{ 'pill-ready' if smoke_test_result.passed else 'pill-not_ready' }}">{{ smoke_test_result.passed_count }}/{{ smoke_test_result.checks|length }} geçti</span>
+  </h2>
+  <p class="meta">Hedef: <code>{{ smoke_test_result.base_url }}</code></p>
+  {% for c in smoke_test_result.checks %}
+  <p>
+    <span class="pill {{ 'pill-ready' if c.ok else 'pill-not_ready' }}">{{ 'OK' if c.ok else 'FAIL' }}</span>
+    <code>{{ c.path }}</code> → {{ c.error if c.error else c.status_code }}{% if c.expected_status %} (beklenen {{ c.expected_status }}){% endif %}
+    <span class="history-meta" style="display:inline">({{ "%.0f"|format(c.latency_ms) }}ms)</span>
+  </p>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if load_test_result %}
+<div class="loadtest-box">
+{% if load_test_result.aborted_reason %}
+  <h2 class="section-title" style="margin-top:0">Yük Testi — Başlatılmadı</h2>
+  <p class="auth-warning" style="margin-bottom:0">{{ load_test_result.aborted_reason }}</p>
+{% else %}
+  <h2 class="section-title" style="margin-top:0">Yük Testi Sonucu</h2>
+  <p class="meta">Hedef: <code>{{ load_test_result.method }} {{ load_test_result.target }}</code></p>
+  {% if load_test_result.stages_ran and load_test_result.stages_ran|length > 1 %}
+  <p class="meta"><strong>Aşamalar:</strong> {% for s in load_test_result.stages_ran %}{{ s.concurrency }}w/{{ "%.0f"|format(s.duration_s) }}s{% if not loop.last %} → {% endif %}{% endfor %}</p>
+  {% endif %}
+  <div class="stat-grid">
+    <div class="stat"><div class="stat-value">{{ load_test_result.concurrency }}</div><div class="stat-label">eşzamanlı worker</div></div>
+    <div class="stat"><div class="stat-value">{{ "%.1f"|format(load_test_result.wall_time_s) }}s</div><div class="stat-label">süre</div></div>
+    <div class="stat"><div class="stat-value">{{ load_test_result.total_requests }}</div><div class="stat-label">toplam istek</div></div>
+    <div class="stat"><div class="stat-value">{{ "%.1f"|format(load_test_result.rps) }}</div><div class="stat-label">istek/sn</div></div>
+    <div class="stat"><div class="stat-value {{ 'stat-bad' if load_test_result.error_rate > 0.05 else ('stat-warn' if load_test_result.error_rate > 0 else 'stat-ok') }}">%{{ "%.1f"|format(load_test_result.error_rate * 100) }}</div><div class="stat-label">hata oranı</div></div>
+  </div>
+  <p><strong>Gecikme (ms):</strong> min {{ "%.0f"|format(load_test_result.latency_min_ms) }} ·
+    ort {{ "%.0f"|format(load_test_result.latency_avg_ms) }} ·
+    p50 {{ "%.0f"|format(load_test_result.latency_p50_ms) }} ·
+    p95 {{ "%.0f"|format(load_test_result.latency_p95_ms) }} ·
+    p99 {{ "%.0f"|format(load_test_result.latency_p99_ms) }} ·
+    max {{ "%.0f"|format(load_test_result.latency_max_ms) }}</p>
+  <p><strong>Durum kodları:</strong></p>
+  <div>
+    {% for code, count in load_test_result.status_codes.items()|sort %}
+      <span class="count-pill">{{ code }}: {{ count }}</span>
+    {% endfor %}
+  </div>
+  {% if load_test_result.errors %}
+    <p><strong>Bağlantı hataları:</strong></p>
+    <div>
+      {% for name, count in load_test_result.errors.items()|sort %}
+        <span class="count-pill" style="border-color:#dc2626">{{ name }}: {{ count }}</span>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% if load_test_result.passed is not none %}
+  <p>
+    <span class="pill {{ 'pill-ready' if load_test_result.passed else 'pill-not_ready' }}">{{ 'GEÇTİ' if load_test_result.passed else 'KALDI' }}</span>
+    Eşik:
+    {% if load_test_result.threshold_p95_ms is not none %}p95 ≤ {{ "%.0f"|format(load_test_result.threshold_p95_ms) }}ms{% endif %}
+    {% if load_test_result.threshold_p95_ms is not none and load_test_result.threshold_error_rate_pct is not none %}, {% endif %}
+    {% if load_test_result.threshold_error_rate_pct is not none %}hata ≤ %{{ "%.1f"|format(load_test_result.threshold_error_rate_pct) }}{% endif %}
+  </p>
+  {% endif %}
+{% endif %}
+</div>
+{% endif %}
+
+{% set open_findings = findings|selectattr('is_open')|list %}
+{% set reviewed_findings = findings|rejectattr('is_open')|list %}
+
+{% if not findings %}
+  <p class="no-findings">Hiçbir bulgu yok.</p>
+{% elif open_findings|length == 0 %}
+  <p class="no-findings">Açık bulgu yok — incelenenler aşağıda.</p>
+{% endif %}
+
+{% if open_findings %}
+<div class="toolbar" id="findings-root">
+  <h2 class="section-title" style="margin:0">Açık bulgular <span class="count-inline">{{ open_findings|length }}</span></h2>
+  <div class="filter-row">
+    <button type="button" class="filter-chip active" data-filter="all">Tümü</button>
+    <button type="button" class="filter-chip" data-filter="critical">Critical</button>
+    <button type="button" class="filter-chip" data-filter="high">High</button>
+    <button type="button" class="filter-chip" data-filter="medium">Medium</button>
+    <button type="button" class="filter-chip" data-filter="low">Low</button>
+    <button type="button" class="filter-chip" data-filter="recon">Recon</button>
+    <button type="button" class="filter-chip" data-filter="web">Web</button>
+    <button type="button" class="filter-chip" data-filter="api">API</button>
+    <button type="button" class="filter-chip" data-filter="mobile">Mobile</button>
+    <button type="button" class="filter-chip" data-filter="network">Network</button>
+    <button type="button" class="filter-chip" data-filter="database">Database</button>
+    <input type="search" id="finding-search" class="search-input" placeholder="Başlık, konum, kanıt ara…" autocomplete="off">
+  </div>
+</div>
+<p class="filter-empty" id="filter-empty" hidden>Bu filtreye uyan bulgu yok.</p>
+
+{% for f in open_findings %}
+{% set haystack = (f.title ~ ' ' ~ f.location ~ ' ' ~ f.description ~ ' ' ~ f.evidence ~ ' ' ~ f.remediation ~ ' ' ~ f.id)|lower %}
+<div class="finding severity-{{ f.severity.value|lower }}"
+     data-severity="{{ f.severity.value|lower }}"
+     data-category="{{ f.category.value|lower }}"
+     data-text="{{ haystack }}">
+  <div class="finding-header">
+    <span class="badge badge-{{ f.severity.value|lower }}" lang="en">{{ f.severity.value }}</span>
+    <span class="category">{{ f.category.value }}</span>
+    <span class="title">{{ f.title }}</span>
+    <button type="button" class="finding-id copy-id" data-id="{{ f.id }}" title="Kimliği kopyala">#{{ f.id }}</button>
+  </div>
+  <div class="location">{{ f.location }}</div>
+  <details class="finding-body">
+    <summary>Açıklama, kanıt ve çözüm</summary>
+    <p><strong>Açıklama:</strong> {{ f.description }}</p>
+    <p><strong>Kanıt:</strong> <code>{{ f.evidence }}</code></p>
+    <p><strong>Çözüm:</strong> {{ f.remediation }}</p>
+  </details>
+</div>
+{% endfor %}
+{% endif %}
+
+{% if reviewed_findings %}
+<h2 class="section-title">İncelenmiş / Kabul Edilmiş <span class="count-inline">{{ reviewed_findings|length }}</span></h2>
+{% for f in reviewed_findings %}
+<div class="finding severity-{{ f.severity.value|lower }} reviewed">
+  <div class="finding-header">
+    <span class="badge badge-{{ f.severity.value|lower }}" lang="en">{{ f.severity.value }}</span>
+    <span class="category">{{ f.category.value }}</span>
+    <span class="title">{{ f.title }}</span>
+    <span class="finding-id">#{{ f.id }}</span>
+  </div>
+  <div class="location">{{ f.location }}</div>
+  <p><strong>Açıklama:</strong> {{ f.description }}</p>
+  <p><strong>Kanıt:</strong> <code>{{ f.evidence }}</code></p>
+  <p><strong>Çözüm:</strong> {{ f.remediation }}</p>
+  <p class="disposition"><strong>Durum:</strong> {{ f.disposition.value }} — {{ f.disposition_reason }}</p>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

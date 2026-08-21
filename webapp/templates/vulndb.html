@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Vulnerability DB — VEXYRON{% endblock %}
+{% block topbar %}scanner'ın gerçekten koştuğu kontroller{% endblock %}
+{% block content %}
+{% set total = namespace(n=0) %}
+{% for cat in categories %}{% set total.n = total.n + cat.entries|length %}{% endfor %}
+
+<div class="page-head">
+  <div class="page-head-left">
+    <span class="page-icon" aria-hidden="true">{{ ui.svg_icon('database') }}</span>
+    <div>
+      <h1>Vulnerability DB</h1>
+      <p class="intro">Scanner'ın otomatik kontrol ettiği açık türleri — bu bir referans listesi, tarama başlatmaz. Taramak için <a href="{{ url_for('index') }}">Hedefini Tara</a> sayfasını kullan; veritabanı servis taraması için oradaki "Veritabanı servis taramasını da çalıştır" kutusunu işaretle.</p>
+    </div>
+  </div>
+  {{ ui.help_card(url_for('index'), 'Tarama formu') }}
+</div>
+
+<h2 class="section-title" style="margin-top:0.5rem">Kontrol veritabanı</h2>
+<div class="toolbar" style="margin-top:0.6rem">
+  <input type="search" id="vulndb-search" class="search-input grow" placeholder="SQLi, CSRF, Redis, APK…" autocomplete="off">
+  <span class="count-inline">{{ total.n }} kontrol · {{ categories|length }} katman</span>
+</div>
+
+<p class="filter-empty" id="list-empty" hidden>Eşleşen kontrol yok.</p>
+
+{% for cat in categories %}
+<div class="vulndb-category" data-text="{{ cat.name }}">{{ cat.name }}</div>
+{% for item in cat.entries %}
+<div class="vulndb-item severity-{{ item.severity|lower }}" data-text="{{ cat.name }} {{ item.name }} {{ item.desc }} {{ item.fix }} {{ item.module }} {{ item.severity }}">
+  <h3><span class="badge badge-{{ item.severity|lower }}" lang="en">{{ item.severity }}</span> {{ item.name }}</h3>
+  <p>{{ item.desc }}</p>
+  <p><strong>Çözüm:</strong> {{ item.fix }}</p>
+  <p><span class="settings-value">{{ item.module }}</span></p>
+</div>
+{% endfor %}
+{% endfor %}
+{% endblock %}

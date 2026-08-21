@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Tarama Geçmişi — VEXYRON{% endblock %}
+{% block topbar %}önceki taramalar · reports/ klasörü{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <span class="page-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </span>
+    <div>
+      <h1>Tarama Geçmişi</h1>
+      <p class="intro">Bu makinede çalıştırılan taramalar. Satıra tıklayınca sonucu uygulama içinde açarsın.</p>
+    </div>
+  </div>
+  <aside class="help-card">
+    <strong>Yardım mı lazım?</strong>
+    <a href="{{ url_for('settings_page') }}">Dokümantasyon</a>
+  </aside>
+</div>
+
+{% if scans %}
+<div class="toolbar">
+  <input type="search" id="history-search" class="search-input grow" placeholder="Hedef veya tarih ara…" autocomplete="off">
+  <span class="count-inline">{{ scans|length }} kayıt</span>
+</div>
+{% endif %}
+
+{% if not scans %}
+  <div class="empty-state">
+    <strong>Henüz tarama yok.</strong>
+    <p>İlk taramayı çalıştırınca raporlar burada listelenir.</p>
+    <a href="{{ url_for('index') }}" class="empty-cta">Hedefini tara →</a>
+  </div>
+{% endif %}
+
+<p class="filter-empty" id="list-empty" hidden>Eşleşen tarama yok.</p>
+
+{% for scan in scans %}
+<div class="history-row" data-text="{{ scan.target }} {{ scan.generated_at }} {{ scan.verdict_label }} {{ scan.folder }}">
+  <a class="history-main" href="/history/{{ scan.folder }}">
+    <div class="history-target">{{ scan.target }}</div>
+    <div class="history-meta">{{ scan.generated_at }} · {{ scan.finding_count }} bulgu · {{ scan.folder }}</div>
+    {% if scan.counts %}
+    <div class="mini-meter" aria-hidden="true">
+      <span class="seg seg-critical" style="flex: {{ scan.counts.get('Critical', 0) }}"></span>
+      <span class="seg seg-high" style="flex: {{ scan.counts.get('High', 0) }}"></span>
+      <span class="seg seg-medium" style="flex: {{ scan.counts.get('Medium', 0) }}"></span>
+      <span class="seg seg-low" style="flex: {{ scan.counts.get('Low', 0) }}"></span>
+      <span class="seg seg-info" style="flex: {{ scan.counts.get('Info', 0) }}"></span>
+    </div>
+    {% endif %}
+  </a>
+  <span class="pill pill-{{ scan.verdict_status|lower }}">{{ scan.verdict_label }}</span>
+  <span class="history-links">
+    <a href="{{ url_for('download_report', subpath=scan.folder ~ '/report.html') }}">HTML</a>
+    <a href="{{ url_for('download_report', subpath=scan.folder ~ '/report.pdf') }}">PDF</a>
+    <a href="{{ url_for('download_report', subpath=scan.folder ~ '/report.json') }}">JSON</a>
+  </span>
+</div>
+{% endfor %}
+{% endblock %}

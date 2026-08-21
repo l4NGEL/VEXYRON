@@ -1,0 +1,8 @@
+# pentest-lab demo yedek dosyasi -- GERCEK DEGIL, tamami sahte/demo degerdir.
+# INTENTIONAL VULN #10: bu dosyanin /static/ altinda erisilebilir olmasi
+# "sensitive data exposure" senaryosunu temsil eder.
+
+DB_PASSWORD=SuperGizli!2024
+API_KEY=FAKE-DEMO-sk-live-1234567890abcdef-NOTREAL
+SMTP_PASSWORD=mailSecret2024
+ADMIN_RESET_TOKEN=fake-reset-token-000111222
