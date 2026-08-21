@@ -9,3 +9,8 @@ reports/*/
 .env
 lab_config.json
 webapp/uploads/
+/uploads/
+build/
+dist/
+.build-venv/
+*.spec.bak

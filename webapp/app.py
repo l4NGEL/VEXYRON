@@ -9,8 +9,19 @@ import zipfile
 from datetime import datetime
 from types import SimpleNamespace
 
-WEBAPP_DIR = os.path.dirname(os.path.abspath(__file__))
-SCANNER_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, "..", "scanner"))
+FROZEN = getattr(sys, "frozen", False)
+if FROZEN:
+    # PyInstaller --onefile: read-only bundled assets (templates/static/scanner)
+    # live under sys._MEIPASS, a fresh temp extraction on every launch. Writable
+    # state (config/reports/uploads) must live next to the .exe instead.
+    BUNDLE_DIR = sys._MEIPASS  # noqa: SLF001
+    WEBAPP_DIR = os.path.join(BUNDLE_DIR, "webapp")
+    SCANNER_DIR = os.path.join(BUNDLE_DIR, "scanner")
+    RUNTIME_DIR = os.path.dirname(sys.executable)
+else:
+    WEBAPP_DIR = os.path.dirname(os.path.abspath(__file__))
+    SCANNER_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, "..", "scanner"))
+    RUNTIME_DIR = os.path.abspath(os.path.join(WEBAPP_DIR, ".."))
 if SCANNER_DIR not in sys.path:
     sys.path.insert(0, SCANNER_DIR)
 
@@ -27,12 +38,12 @@ from report.pdf_report import write_pdf_report  # noqa: E402
 from safety import UnauthorizedTargetError  # noqa: E402
 from vulndb import METHODOLOGY_MAP, VULN_DB  # noqa: E402
 
-PROJECT_ROOT = os.path.abspath(os.path.join(WEBAPP_DIR, ".."))
+PROJECT_ROOT = RUNTIME_DIR
 CONFIG_PATH = os.path.join(PROJECT_ROOT, "lab_config.json")
 DEFAULT_REPORTS_DIR = os.path.join(PROJECT_ROOT, "reports")
 DEFAULT_PORT = 5059
 CHROME_BLOCKED_PORTS = {5060, 5061}
-UPLOADS_DIR = os.path.join(WEBAPP_DIR, "uploads")
+UPLOADS_DIR = os.path.join(PROJECT_ROOT, "uploads")
 STYLE_CSS_PATH = os.path.join(WEBAPP_DIR, "static", "style.css")
 APP_JS_PATH = os.path.join(WEBAPP_DIR, "static", "app.js")
 _SAFE_FOLDER = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -143,7 +154,11 @@ def _scan_count(reports_dir: str) -> int:
     )
 
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    template_folder=os.path.join(WEBAPP_DIR, "templates"),
+    static_folder=os.path.join(WEBAPP_DIR, "static"),
+)
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
@@ -670,4 +685,14 @@ def settings_page():
 
 if __name__ == "__main__":
     port = get_configured_port()
+    if FROZEN:
+        import threading
+        import time
+        import webbrowser
+
+        def _open_browser():
+            time.sleep(1.2)
+            webbrowser.open(f"http://127.0.0.1:{port}")
+
+        threading.Thread(target=_open_browser, daemon=True).start()
     app.run(host="127.0.0.1", port=port, debug=False)

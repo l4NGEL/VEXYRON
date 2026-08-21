@@ -104,9 +104,13 @@ python run.py
 
 `http://127.0.0.1:5000` adresinde çalışmaya başlar. Demo hesaplar için [vulnerable-app/VULNERABILITIES.md](vulnerable-app/VULNERABILITIES.md) dosyasına bakın.
 
-**2) Taramayı çalıştır — iki yoldan biriyle**
+**2) Taramayı çalıştır — üç yoldan biriyle**
 
-**a) Tarayıcıdan (webapp) — en kolay yol**
+**a) `.exe` — Python kurmadan, tek dosya**
+
+[Releases](../../releases) sayfasından `VEXYRON.exe`'yi indir, herhangi bir klasöre koy, çift tıkla. Sunucu başlar ve tarayıcı otomatik açılır; `reports/` klasörü exe'nin yanında oluşur. `vexyron.spec` ile kendin de derleyebilirsin: `pip install pyinstaller && pyinstaller vexyron.spec` (webapp'i paketler; `vulnerable-app` kasıtlı olarak dahil değil, o kaynak koddan `python run.py` ile çalıştırılır).
+
+**b) Tarayıcıdan (webapp, kaynak koddan)**
 
 ```bash
 cd webapp
@@ -116,7 +120,7 @@ python app.py
 
 `http://127.0.0.1:5059` adresini aç (port çakışırsa Ayarlar sayfasından veya `PENTEST_LAB_WEBAPP_PORT` ortam değişkeniyle değiştirin), hedef URL'yi yapıştır, **Tara**'ya bas. "Gelişmiş seçenekler" altında login bilgisi, ikinci (düşük yetkili) hesap, ağ taraması, mobil APK yolu, smoke test ve yük testi (aşamalı/ramp + eşik) gibi ayarlara ulaşabilirsin. Sonuç sayfasında verdict banner'ı + tüm bulgular + HTML/PDF/JSON rapor indirme linkleri görünür.
 
-**b) Komut satırından (CLI) — otomasyon/CI için**
+**c) Komut satırından (CLI) — otomasyon/CI için**
 
 ```bash
 cd scanner
@@ -128,7 +132,7 @@ python scanner_cli.py --url http://127.0.0.1:5000 --scan-network --host 127.0.0.
   --output ../reports/demo
 ```
 
-Her iki yol da aynı şeyi yapar: web tarama, mobil backend/API tarama, mobil APK statik analizi, ağ/port taraması ve broken-access-control testi (düşük yetkili `ayse` hesabıyla).
+webapp (exe veya kaynak koddan, ikisi de aynı kod) ve CLI aynı şeyi yapar: web tarama, mobil backend/API tarama, mobil APK statik analizi, ağ/port taraması ve broken-access-control testi (düşük yetkili `ayse` hesabıyla).
 
 **3) Raporu incele**
 
