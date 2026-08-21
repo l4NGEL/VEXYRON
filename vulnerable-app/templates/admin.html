@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admin Paneli — Kullanıcılar</h1>
+<table>
+  <tr><th>ID</th><th>Kullanıcı adı</th><th>E-posta</th><th>Rol</th></tr>
+  {% for u in users %}
+  <tr><td>{{ u['id'] }}</td><td>{{ u['username'] }}</td><td>{{ u['email'] }}</td><td>{{ u['role'] }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

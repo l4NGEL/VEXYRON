@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ağ Tanılama: Ping</h1>
+<p class="hint">Bir host/IP girin, sunucu onu ping'ler.</p>
+<form method="post">
+  <input type="text" name="host" placeholder="127.0.0.1">
+  <button type="submit">Ping At</button>
+</form>
+{% if output %}
+<pre class="output">{{ output }}</pre>
+{% endif %}
+{% endblock %}

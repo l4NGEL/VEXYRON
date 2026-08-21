@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Profil #{{ profile_user['id'] }}</h1>
+<p>Kullanıcı adı: {{ profile_user['username'] }}</p>
+<p>E-posta: {{ profile_user['email'] }}</p>
+<p>Rol: {{ profile_user['role'] }}</p>
+{% if user and user['id'] == profile_user['id'] %}
+<h2>E-posta güncelle</h2>
+<form method="post" action="{{ url_for('profile_update') }}">
+  <input type="email" name="email" value="{{ profile_user['email'] }}">
+  <button type="submit">Güncelle</button>
+</form>
+{% endif %}
+<p class="hint">Not: /profile/1, /profile/2, /profile/3 gibi başka id'leri de deneyin.</p>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Demo Ürünler</h1>
+<div class="grid">
+  {% for p in products %}
+  <div class="card">
+    <h3>{{ p['name'] }}</h3>
+    <p>{{ p['description'] }}</p>
+    <strong>{{ "%.2f"|format(p['price']) }} TL</strong>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

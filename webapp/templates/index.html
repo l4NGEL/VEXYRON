@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% import "_macros.html" as ui %}
+{% block title %}Hedefini Tara — VEXYRON{% endblock %}
+{% block topbar %}Hedefini Tara{% endblock %}
+{% block body_class %}page-scan{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <span class="page-icon" aria-hidden="true">{{ ui.svg_icon('scan') }}</span>
+    <div>
+      <h1>Hedefini Tara</h1>
+      <p class="intro">Bir URL gir, Tara’ya bas. Yalnızca izinli sistemlerini tara — localhost / private IP dışındaki hedefler için aşağıdaki onay kutusu zorunludur.</p>
+    </div>
+  </div>
+  {{ ui.help_card(url_for('settings_page')) }}
+</div>
+
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+
+<div class="auth-warning" id="auth-warning" hidden>
+  Bu adres localhost / private IP değil. Taramak için aşağıdaki
+  <strong>yetki onayını</strong> işaretlemen gerekir — ve yalnızca kendi sistemin olmalı.
+</div>
+
+<form method="post" action="{{ url_for('scan') }}" id="scan-form" enctype="multipart/form-data">
+  <section class="card target-card">
+    <div class="card-toolbar">
+      <div class="profiles" role="group" aria-label="Tarama profili">
+        <button type="button" class="profile active" data-profile="quick">Hızlı</button>
+        <button type="button" class="profile" data-profile="auth">Girişli</button>
+        <button type="button" class="profile" data-profile="full">Tam tarama</button>
+      </div>
+      <div class="coverage" aria-label="Bu taramada çalışacak katmanlar">
+        <span class="chip on" data-cov="recon">Keşif</span>
+        <span class="chip on">Web</span>
+        <span class="chip on" data-cov="api">API</span>
+        <span class="chip" data-cov="auth">Oturum</span>
+        <span class="chip" data-cov="bac">Yetki testi</span>
+        <span class="chip" data-cov="network">Ağ</span>
+        <span class="chip" data-cov="database">Veritabanı</span>
+        <span class="chip" data-cov="apk">APK</span>
+        <span class="chip" data-cov="smoke">Smoke test</span>
+        <span class="chip" data-cov="load">Yük testi</span>
+      </div>
+      <button type="button" class="text-btn" id="fill-demo">Lab demosunu doldur</button>
+    </div>
+
+    <label class="url-label" for="target-url">Hedef URL</label>
+    <div class="url-row">
+      <div class="url-control">
+        <span class="field-icon" aria-hidden="true">{{ ui.svg_icon('globe') }}</span>
+        <input id="target-url" type="text" name="url" placeholder="http://127.0.0.1:5000" required
+               value="{{ form.url if form else 'http://127.0.0.1:5000' }}" autocomplete="url" spellcheck="false">
+      </div>
+      <button type="submit" id="scan-btn">
+        {{ ui.svg_icon('scan') }}
+        <span class="btn-label">Tara</span>
+      </button>
+    </div>
+  </section>
+
+  <details class="advanced card"{% if expand_advanced %} open{% endif %}>
+    <summary>
+      <span class="adv-caret" aria-hidden="true">{{ ui.svg_icon('chevron') }}</span>
+      Gelişmiş seçenekler
+    </summary>
+
+    <div class="adv-grid">
+      <div class="adv-col">
+        <h3 class="adv-title">
+          <span class="adv-ico ico-key">{{ ui.svg_icon('key') }}</span>
+          Giriş yaparak tara
+          <span class="adv-opt">(opsiyonel)</span>
+        </h3>
+        <p class="adv-hint">Daha fazla açık bulur: IDOR, CSRF, admin paneli, mobil API.</p>
+        {{ ui.text_field('Login path', 'login_path', '/login veya /v1/auth/login', form.login_path if form else '', '', 'link') }}
+        {{ ui.password_field('Şifre', 'password', 'password') }}
+        {{ ui.check_field('login_json', "Login body'sini JSON olarak gönder", '(form yerine — JWT / JSON API’ler için)', form.login_json if form else false) }}
+        {{ ui.text_field('Ek sabit alanlar', 'login_extra', '{"login_type":"staff"}', form.login_extra if form else '', '(JSON)', 'list') }}
+
+        <h3 class="adv-title spaced">
+          <span class="adv-ico ico-user">{{ ui.svg_icon('users') }}</span>
+          Broken access control testi
+        </h3>
+        <p class="adv-hint">Admin olmayan, düşük yetkili ikinci bir hesap. Yalnızca izinli hedefte kullan.</p>
+        <div class="field-pair">
+          {{ ui.text_field('Kullanıcı adı', 'second_username', '', form.second_username if form else '', '', 'user', 'username') }}
+          {{ ui.password_field('Şifre', 'second_password', 'second_password') }}
+        </div>
+
+        <h3 class="adv-title spaced">
+          <span class="adv-ico ico-globe">{{ ui.svg_icon('globe') }}</span>
+          Ağ ve mobil
+        </h3>
+        {{ ui.check_field('scan_network', 'Port taramasını da çalıştır') }}
+        {{ ui.check_field('scan_database', 'Veritabanı servis taramasını da çalıştır') }}
+        {{ ui.text_field('Ağ taraması için host', 'host', '127.0.0.1', form.host if form else '', '', 'monitor') }}
+      </div>
+
+      <div class="adv-col">
+        {{ ui.text_field('Kullanıcı adı / e-posta', 'username', 'kullanıcı adı veya e-posta', form.username if form else '', '', 'user', 'username') }}
+        {{ ui.text_field('Kullanıcı adı alan adı', 'login_username_field', 'username', form.login_username_field if form else '', 'JSON içinde username yerine bu name kullanılır.', 'list') }}
+
+        <label class="drop-field">
+          <span class="field-label">Mobil APK klasörü</span>
+          <span class="drop-zone" id="apk-drop" data-drop="apk" tabindex="0">
+            <input type="file" name="apk_file" id="apk_file" class="drop-file" accept=".apk,.zip,application/vnd.android.package-archive,application/zip">
+            <input type="file" name="apk_folder" id="apk_folder" class="drop-file" webkitdirectory directory multiple>
+            <div id="apk-rel-fields"></div>
+            <span class="drop-ico" aria-hidden="true">{{ ui.svg_icon('folder') }}</span>
+            <strong class="drop-title">Klasörü seç veya sürükle bırak</strong>
+            <span class="drop-picked" id="apk-picked" hidden></span>
+            <span class="drop-hint">.apk, .zip veya decoded klasör</span>
+            <button type="button" class="drop-folder-btn" id="apk-folder-btn">Klasör seç</button>
+          </span>
+        </label>
+        {{ ui.check_field('scan_apk', 'Mobil APK taramasını da çalıştır', 'yalnız dosya/klasör veya yol verdiğinde') }}
+        <label class="field path-fallback">
+          <span class="field-label">Sunucu yolu <span class="field-hint">(opsiyonel, tarama kutusunu da işaretle)</span></span>
+          <input type="text" name="apk_path" placeholder="../vulnerable-app/mobile-decoded-apk" value="{{ form.apk_path if form else '' }}">
+        </label>
+        {{ ui.check_field('no_api', 'Mobil backend / JSON API taramasını atla') }}
+      </div>
+
+      <div class="adv-col">
+        {{ ui.check_field('i_authorize', 'Bu hedefi taramak için iznim var', 'localhost / private IP dışı için zorunlu', form.i_authorize if form else false, true) }}
+
+        <h3 class="adv-title spaced">İncelenmiş bulgular</h3>
+        <label class="drop-field">
+          <span class="field-label">Kabul edilmiş bulgular</span>
+          <span class="drop-zone" id="accepted-drop" data-drop="json" tabindex="0">
+            <input type="file" name="accepted_file" id="accepted_file" class="drop-file" accept=".json,application/json">
+            <span class="drop-ico" aria-hidden="true">{{ ui.svg_icon('upload') }}</span>
+            <strong class="drop-title">Dosya seç veya sürükle bırak</strong>
+            <span class="drop-picked" id="accepted-picked" hidden></span>
+            <span class="drop-hint">accepted_findings.json</span>
+          </span>
+        </label>
+        <label class="field path-fallback">
+          <span class="field-label">Kabul edilmiş bulgular dosyası</span>
+          <input type="text" name="accepted_findings" placeholder="accepted_findings.json" value="{{ form.accepted_findings if form else '' }}">
+        </label>
+
+        <h3 class="adv-title spaced">Smoke test</h3>
+        <p class="adv-hint">Ağır taramadan ÖNCE çalışır; hedefin ayakta olup olmadığını saniyeler içinde kontrol eder.</p>
+        {{ ui.check_field('smoke_test', 'Smoke test de çalıştır') }}
+        <label class="field">
+          <span class="field-label">Path'ler <span class="field-hint">(satır başına biri — "path" veya "path beklenen_kod"; boşsa "/")</span></span>
+          <textarea name="smoke_targets" rows="3" placeholder="/&#10;/login 200&#10;/api/health 200">{{ form.smoke_targets if form else '' }}</textarea>
+        </label>
+
+        <h3 class="adv-title spaced">Yük testi</h3>
+        <p class="adv-hint">Güvenlik taramasından sonra çalışır. Varsayılan kapalıdır; hedefe yük bindirmeden önce emin ol.</p>
+        {{ ui.check_field('load_test', 'Yük testini de çalıştır') }}
+        {{ ui.text_field('Path', 'load_test_path', '/search', form.load_test_path if form else '', 'Yük altında denenecek uç.', 'search') }}
+        <div class="field-pair">
+          <label class="field">
+            <span class="field-label">Eşzamanlı</span>
+            <input type="number" name="load_test_users" min="1" max="200" placeholder="10" value="{{ form.load_test_users if form else '' }}">
+          </label>
+          <label class="field">
+            <span class="field-label">Süre (sn)</span>
+            <input type="number" name="load_test_duration" min="1" max="120" placeholder="15" value="{{ form.load_test_duration if form else '' }}">
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">Aşamalar <span class="field-hint">(opsiyonel, ramp — satır başına "eşzamanlı,süre", ör. "10,10" — verilirse yukarıdaki eşzamanlı/süre yok sayılır, en fazla 5 aşama)</span></span>
+          <textarea name="load_test_stages" rows="2" placeholder="10,10&#10;50,20&#10;10,10">{{ form.load_test_stages if form else '' }}</textarea>
+        </label>
+        <div class="field-pair">
+          <label class="field">
+            <span class="field-label">Eşik: maks p95 (ms)</span>
+            <input type="number" name="load_test_threshold_p95_ms" min="1" placeholder="opsiyonel" value="{{ form.load_test_threshold_p95_ms if form else '' }}">
+          </label>
+          <label class="field">
+            <span class="field-label">Eşik: maks hata (%)</span>
+            <input type="number" name="load_test_threshold_error_pct" min="0" max="100" step="0.1" placeholder="opsiyonel" value="{{ form.load_test_threshold_error_pct if form else '' }}">
+          </label>
+        </div>
+      </div>
+    </div>
+  </details>
+
+  <div class="note-banner">
+    <span class="note-icon" aria-hidden="true">{{ ui.svg_icon('shield') }}</span>
+    <div>
+      <strong>Önemli not</strong>
+      <p>Yalnızca kendi sistemlerini veya yasal iznine sahip olduğun sistemleri tara. İzinsiz tarama yasal sonuç doğurabilir.</p>
+    </div>
+    <button type="button" class="reset-btn" id="reset-form">
+      {{ ui.svg_icon('refresh') }}
+      Varsayılanları temizle
+    </button>
+  </div>
+</form>
+
+<div class="scan-overlay" id="scan-overlay" hidden>
+  <div class="scan-overlay-card">
+    <div class="scan-spinner" aria-hidden="true"></div>
+    <h2>Tarama çalışıyor</h2>
+    <p>Hedef keşfediliyor, kontroller koşuyor. Bu genellikle 30–90 saniye sürer — sekmeyi kapatma.</p>
+    <ul class="scan-steps">
+      <li>Crawl ve keşif</li>
+      <li>Web / API kontrolleri</li>
+      <li>Verdict ve rapor</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

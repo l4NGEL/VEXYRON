@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ürün Ara</h1>
+<form method="get">
+  <input type="text" name="q" value="{{ q }}" placeholder="ürün ara...">
+  <button type="submit">Ara</button>
+</form>
+{% if db_error %}<p class="error">Veritabanı hatası: {{ db_error }}</p>{% endif %}
+{% if q %}
+<p>
+  {# INTENTIONAL VULN #4: q parametresi |safe ile escape'siz basiliyor (reflected XSS) #}
+  Aramanız: {{ q|safe }}
+</p>
+{% endif %}
+<ul>
+  {% for r in results %}
+  <li>{{ r['name'] }} — {{ r['description'] }} ({{ "%.2f"|format(r['price']) }} TL)</li>
+  {% endfor %}
+</ul>
+{% endblock %}

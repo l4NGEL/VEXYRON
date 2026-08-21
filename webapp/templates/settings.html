@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Ayarlar — VEXYRON{% endblock %}
+{% block topbar %}Ayarlar{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="page-head-left">
+    <span class="page-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M4 12h2M18 12h2M12 4v2M12 18v2"/></svg>
+    </span>
+    <div>
+      <h1>Ayarlar</h1>
+      <p class="intro">Dinlenen adres ve rapor klasörü bu PC’de güncellenir. Kayıt <code>lab_config.json</code> içine yazılır (git’e gitmez).</p>
+    </div>
+  </div>
+  <aside class="help-card">
+    <strong>Yardım mı lazım?</strong>
+    <a href="{{ url_for('history') }}">Tarama geçmişi</a>
+  </aside>
+</div>
+
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if saved %}
+<p class="auth-warning banner-success">
+  Bu PC’de kaydedildi{% if restart_needed %} — yeni port için uygulamayı yeniden başlat{% endif %}.
+</p>
+{% endif %}
+
+<form method="post" action="{{ url_for('settings_page') }}">
+<section class="setting-panel">
+  <h2 class="setting-panel-title">Bu PC — {{ machine_name }}</h2>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Şu an açık adres</div>
+      <p class="setting-help">Tarayıcının bağlandığı host:port (bu süreç). Config: <code>{{ config_path }}</code></p>
+    </div>
+    <div class="setting-control">
+      <code class="settings-value">{{ request.host }}</code>
+      <span class="status-pill">yerel</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Kayıtlı port</div>
+      <p class="setting-help">
+        {% if env_port_locked %}
+          Bu süreç <code>PENTEST_LAB_WEBAPP_PORT</code> ile açıldı; kayıt sonraki başlatmada (ortam yokken) kullanılır.
+        {% else %}
+          Kaydet. Port değişince uygulamayı yeniden başlat. Chrome 5060/5061’i kilitler.
+        {% endif %}
+      </p>
+    </div>
+    <div class="setting-control">
+      <input type="number" name="webapp_port" min="1024" max="65535" value="{{ configured_port }}">
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Rapor klasörü</div>
+      <p class="setting-help">Bu makinedeki klasör. Boş bırakırsan proje içi varsayılan: <code>{{ default_reports_dir }}</code>. {{ scan_count }} kayıtlı tarama.</p>
+    </div>
+    <div class="setting-control setting-control-stack">
+      <input type="text" name="reports_dir" class="settings-path-input" value="{{ reports_dir }}" spellcheck="false">
+      <label class="check" style="margin:0">
+        <input type="checkbox" name="reset_reports"> Bu PC’nin varsayılanına sıfırla
+      </label>
+      <button type="button" class="copy-btn" data-copy="{{ reports_dir }}">Yolu kopyala</button>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Kaydet</div>
+      <p class="setting-help">Değerler yalnızca bu kurulumun <code>lab_config.json</code> dosyasında durur.</p>
+    </div>
+    <div class="setting-control">
+      <button type="submit" class="copy-btn" style="background:var(--brand);color:#fff;border-color:transparent">Bu PC’de kaydet</button>
+    </div>
+  </div>
+</section>
+</form>
+
+<section class="setting-panel">
+  <h2 class="setting-panel-title">Hesap &amp; bağlantılar</h2>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Yerel tarayıcı</div>
+      <p class="setting-help">Web, API, ağ ve APK kontrolleri bu makinede koşar. Anahtar girmen gerekmez.</p>
+    </div>
+    <div class="setting-control">
+      <span class="status-pill">gerekmez</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Rapor depolama</div>
+      <p class="setting-help">Çıktılar <code>reports/</code> klasörüne yazılır. Uzak bucket veya token yok.</p>
+    </div>
+    <div class="setting-control">
+      <span class="status-pill">yerel</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Kimlik</div>
+      <p class="setting-help">Tek kullanıcı, oturum yok. Kenar çubuğundaki Pentester kartı yalnızca arayüz kimliğidir.</p>
+    </div>
+    <div class="setting-control">
+      <span class="status-pill">yerel oturum</span>
+    </div>
+  </div>
+</section>
+
+<section class="setting-panel">
+  <h2 class="setting-panel-title">Tarama kuralları</h2>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Yetki kapsamı</div>
+      <p class="setting-help">Localhost / private IP dışı hedefler için tarama formundaki yetki onayı zorunlu. Kaynak: <code>scanner/safety.py</code>.</p>
+    </div>
+    <div class="setting-control">
+      <span class="chip on">127.0.0.1</span>
+      <span class="chip on">10.x</span>
+      <span class="chip on">192.168.x</span>
+      <span class="chip on">172.16–31.x</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Yük testi tavanı</div>
+      <p class="setting-help">Kazara DoS’u kesmek için sert sınır. Kaynak: <code>scanner/loadtest/runner.py</code>.</p>
+    </div>
+    <div class="setting-control">
+      <span class="stat-mini"><strong>{{ max_concurrency }}</strong> worker</span>
+      <span class="stat-mini"><strong>{{ max_duration }}</strong> sn</span>
+    </div>
+  </div>
+
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Dosya yükleme</div>
+      <p class="setting-help">APK (.apk / zip / klasör) ve accepted_findings.json tarayıcıdan alınır. Zip path traversal süzülür; geçici kopya tarama bitince silinir.</p>
+    </div>
+    <div class="setting-control">
+      <span class="stat-mini"><strong>{{ max_upload_mb }}</strong> MB tavan</span>
+    </div>
+  </div>
+</section>
+
+<section class="setting-panel">
+  <h2 class="setting-panel-title">Pentest metodolojisi — lab karşılığı</h2>
+  <div class="setting-panel-body">
+    <p class="setting-help" style="margin:0 0 1rem">PTES / Cyber Kill Chain eşlemesi. Keşif ve zafiyet taraması var; sömürü, kalıcılık ve iz silme yok.</p>
+    <div class="meth-grid">
+      {% for step in methodology %}
+      <article class="meth-card {{ step.status }}">
+        <span class="meth-badge">{{ 'var' if step.status == 'on' else 'yok' }}</span>
+        <h3>{{ step.phase }}</h3>
+        <p>{{ step.lab }}</p>
+        <p class="meth-note">{{ step.note }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="setting-panel">
+  <h2 class="setting-panel-title">Dokümantasyon</h2>
+  <div class="setting-row">
+    <div class="setting-copy">
+      <div class="setting-label">Proje dosyaları</div>
+      <p class="setting-help">CLI referansı ve kasıtlı açık listesi repoda durur — harici hesap gerektirmez.</p>
+    </div>
+    <div class="setting-control setting-control-stack">
+      <code class="settings-value">README.md</code>
+      <code class="settings-value">vulnerable-app/VULNERABILITIES.md</code>
+    </div>
+  </div>
+</section>
+{% endblock %}

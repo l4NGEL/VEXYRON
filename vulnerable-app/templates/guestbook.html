@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Ziyaretçi Defteri</h1>
+<form method="post">
+  <label>Ad <input type="text" name="author"></label>
+  <label>Mesaj <textarea name="message"></textarea></label>
+  <button type="submit">Gönder</button>
+</form>
+<hr>
+{% for e in entries %}
+<div class="guestbook-entry">
+  <strong>{{ e['author'] }}</strong>
+  {# INTENTIONAL VULN #3: mesaj |safe ile escape'siz render ediliyor (stored XSS) #}
+  <p>{{ e['message']|safe }}</p>
+</div>
+{% endfor %}
+{% endblock %}
